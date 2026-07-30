@@ -6,12 +6,25 @@ import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
-  try {
-    const session = await getSession();
-    if (session) redirect("/myday");
-  } catch {
-    // show login
+function safeNextPath(value: string | undefined | null) {
+  if (!value) return null;
+  if (!value.startsWith("/")) return null;
+  if (value.startsWith("//")) return null;
+  if (value.startsWith("/login")) return null;
+  return value;
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const params = await searchParams;
+  const nextPath = safeNextPath(params.next) ?? "/myday";
+
+  const session = await getSession();
+  if (session) {
+    redirect(nextPath);
   }
 
   return (
@@ -36,7 +49,7 @@ export default async function LoginPage() {
         <p className="mt-3 mb-8 text-muted">
           Notes and feeds are private to your admin account.
         </p>
-        <LoginForm />
+        <LoginForm nextPath={nextPath} />
       </main>
     </div>
   );

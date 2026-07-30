@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { loginAction, type ActionResult } from "@/app/actions";
 
-export function LoginForm() {
+export function LoginForm({ nextPath = "/myday" }: { nextPath?: string }) {
   const [state, formAction, pending] = useActionState(
     loginAction,
     null as ActionResult | null,
@@ -11,6 +11,7 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      <input type="hidden" name="next" value={nextPath} />
       <div>
         <label
           className="mb-2 block text-sm font-medium text-muted"

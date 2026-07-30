@@ -23,6 +23,13 @@ export type ActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string };
 
+function safeNextPath(value: string) {
+  if (!value.startsWith("/")) return "/myday";
+  if (value.startsWith("//")) return "/myday";
+  if (value.startsWith("/login")) return "/myday";
+  return value;
+}
+
 export async function loginAction(
   _prev: ActionResult | null,
   formData: FormData,
@@ -35,6 +42,7 @@ export async function loginAction(
 
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const nextPath = safeNextPath(String(formData.get("next") ?? "/myday"));
 
   if (!username || !password) {
     return { ok: false, error: "Username and password are required." };
@@ -59,7 +67,7 @@ export async function loginAction(
     };
   }
 
-  redirect("/myday");
+  redirect(nextPath);
 }
 
 export async function logoutAction() {
