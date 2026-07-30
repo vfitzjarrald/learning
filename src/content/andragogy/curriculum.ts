@@ -1611,3 +1611,44 @@ export const WEEKS: Week[] = WEEK_PLANS.map((weekPlan) => ({
   ...weekPlan,
   days: weekPlan.days.map(day),
 }));
+
+export const TOTAL_LESSONS = TOTAL_WEEKS * DAYS_PER_WEEK;
+
+export function padWeek(week: number) {
+  return String(week).padStart(2, "0");
+}
+
+export function getPhaseForWeek(week: number): Phase {
+  return PHASES.find((phase) => week >= phase.weekStart && week <= phase.weekEnd) ?? PHASES[0];
+}
+
+export function getWeek(week: number): Week | null {
+  return WEEKS.find((item) => item.week === week) ?? null;
+}
+
+export function getDay(week: number, day: number) {
+  const weekData = getWeek(week);
+  return weekData?.days.find((item) => item.day === day) ?? null;
+}
+
+export type LessonPosition = { week: number; day: number };
+
+export function lessonOrdinal(week: number, day: number) {
+  return (week - 1) * DAYS_PER_WEEK + (day - 1);
+}
+
+export function positionFromOrdinal(ordinal: number): LessonPosition | null {
+  if (ordinal < 0 || ordinal >= TOTAL_LESSONS) return null;
+  return {
+    week: Math.floor(ordinal / DAYS_PER_WEEK) + 1,
+    day: (ordinal % DAYS_PER_WEEK) + 1,
+  };
+}
+
+export function nextLessonPosition(week: number, day: number) {
+  return positionFromOrdinal(lessonOrdinal(week, day) + 1);
+}
+
+export function previousLessonPosition(week: number, day: number) {
+  return positionFromOrdinal(lessonOrdinal(week, day) - 1);
+}

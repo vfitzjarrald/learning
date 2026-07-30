@@ -840,3 +840,62 @@ export const DIAGNOSTICS: Diagnostics = {
     },
   ],
 };
+
+export const DIAGNOSTIC_MASTERY_THRESHOLD = 80;
+
+export function getDiagnosticPhase(phase: PhaseId) {
+  return DIAGNOSTICS.phases.find((item) => item.phase === phase) ?? null;
+}
+
+export function getDiagnosticQuestions(phase: PhaseId, kind: "baseline" | "reassessment") {
+  return getDiagnosticPhase(phase)?.[kind] ?? [];
+}
+
+export function publicDiagnosticQuestions(questions: DiagnosticQuestion[]) {
+  return questions.map((question) => ({
+    id: question.id,
+    skillId: question.skillId,
+    stem: question.stem,
+    explanation: question.explanation,
+    choices: question.choices.map(({ letter, text }) => ({ letter, text })),
+  }));
+}
+
+export function scoreDiagnostic(
+  questions: DiagnosticQuestion[],
+  answers: Record<string, string>,
+) {
+  const bySkill = new Map<string, { correct: number; total: number }>();
+  let correct = 0;
+
+  for (const question of questions) {
+    const right = question.choices.find((choice) => choice.correct)?.letter;
+    const isCorrect = Boolean(right && answers[question.id] === right);
+    if (isCorrect) correct += 1;
+    const bucket = bySkill.get(question.skillId) ?? { correct: 0, total: 0 };
+    bucket.total += 1;
+    if (isCorrect) bucket.correct += 1;
+    bySkill.set(question.skillId, bucket);
+  }
+
+  const skillScores = [...bySkill.entries()].map(([skillId, value]) => {
+    const scorePct =
+      value.total === 0 ? 0 : Math.round((value.correct / value.total) * 1000) / 10;
+    return {
+      skillId,
+      correct: value.correct,
+      total: value.total,
+      scorePct,
+      mastered: scorePct >= DIAGNOSTIC_MASTERY_THRESHOLD,
+    };
+  });
+
+  const total = questions.length;
+  return {
+    correct,
+    total,
+    scorePct: total === 0 ? 0 : Math.round((correct / total) * 1000) / 10,
+    skillScores,
+    masteredSkillIds: skillScores.filter((item) => item.mastered).map((item) => item.skillId),
+  };
+}

@@ -56,6 +56,78 @@ async function main() {
   await sql`CREATE INDEX IF NOT EXISTS idx_notes_user_date ON notes(user_id, note_date DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_notes_user_domain ON notes(user_id, domain)`;
 
+  console.log("Applying Andragogy course schema…");
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_day_progress (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      week INTEGER NOT NULL CHECK (week BETWEEN 1 AND 16),
+      day INTEGER NOT NULL CHECK (day BETWEEN 1 AND 5),
+      completed BOOLEAN NOT NULL DEFAULT FALSE,
+      completed_at TIMESTAMPTZ,
+      UNIQUE (user_id, week, day)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_day_notes (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      week INTEGER NOT NULL CHECK (week BETWEEN 1 AND 16),
+      day INTEGER NOT NULL CHECK (day BETWEEN 1 AND 5),
+      body TEXT NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, week, day)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_quiz_attempts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      scope TEXT NOT NULL,
+      score_pct DOUBLE PRECISION NOT NULL,
+      answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_gate_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      phase INTEGER NOT NULL CHECK (phase BETWEEN 1 AND 4),
+      item_key TEXT NOT NULL,
+      done BOOLEAN NOT NULL DEFAULT FALSE,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, phase, item_key)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_diagnostic_attempts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      phase INTEGER NOT NULL CHECK (phase BETWEEN 1 AND 4),
+      attempt_kind TEXT NOT NULL CHECK (attempt_kind IN ('baseline', 'reassessment')),
+      score_pct DOUBLE PRECISION NOT NULL,
+      answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+      skill_scores JSONB NOT NULL DEFAULT '[]'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS andragogy_achievements (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      achievement_id TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      source_ref TEXT,
+      earned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, achievement_id)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_andr_progress_user ON andragogy_day_progress(user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_andr_notes_user ON andragogy_day_notes(user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_andr_quiz_user ON andragogy_quiz_attempts(user_id, scope)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_andr_diag_user ON andragogy_diagnostic_attempts(user_id, phase)`;
+
   const admins = await sql`SELECT id FROM users WHERE role = 'admin' LIMIT 1`;
   if (admins.length === 0) {
     const username = process.env.ADMIN_USERNAME?.trim();

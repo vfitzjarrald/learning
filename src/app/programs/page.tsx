@@ -21,8 +21,9 @@ export default async function ProgramsPage() {
           Learning microsites
         </h1>
         <p className="mt-3 max-w-2xl text-muted">
-          Deep learning programs live here as linked microsites. The AI Expert
-          course is live now; Andragogy is next, then Product Management.
+          Deep learning programs live here as microsites. The AI Expert course
+          links out; Andragogy Expert runs in this hub; Product Management is
+          next.
         </p>
       </section>
 
@@ -54,12 +55,17 @@ export default async function ProgramsPage() {
                 >
                   Open The AI Expert
                 </a>
+              ) : program.status === "live" ? (
+                <Link
+                  href={program.href}
+                  className="inline-flex items-center justify-center bg-accent px-5 py-3 text-sm font-semibold text-[#041018] transition hover:brightness-110"
+                >
+                  Enter {program.title}
+                </Link>
               ) : program.status === "next" ? (
-                <p className="text-sm text-accent">
-                  Next up — microsite shell coming after MyDay foundation.
-                </p>
+                <p className="text-sm text-accent">Next up after Andragogy.</p>
               ) : (
-                <p className="text-sm text-muted">Planned after Andragogy.</p>
+                <p className="text-sm text-muted">Planned.</p>
               )}
             </div>
           </li>
