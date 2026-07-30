@@ -1,31 +1,34 @@
-export default function Home() {
+import Link from "next/link";
+import { Atmosphere } from "@/components/Atmosphere";
+import { getSession } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let signedIn = false;
+  try {
+    signedIn = Boolean(await getSession());
+  } catch {
+    signedIn = false;
+  }
+
   return (
     <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
-      <div
-        aria-hidden
-        className="bg-drift pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(circle at 18% 20%, rgba(61,214,198,0.22), transparent 42%), radial-gradient(circle at 82% 12%, rgba(88,126,255,0.18), transparent 36%), linear-gradient(160deg, #07101c 0%, #0b1220 48%, #101b2e 100%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-40"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(157,176,201,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(157,176,201,0.08) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage:
-            "radial-gradient(circle at center, black 35%, transparent 78%)",
-        }}
-      />
+      <Atmosphere />
 
       <header className="animate-rise mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8 sm:px-10">
         <p className="font-[family-name:var(--font-display)] text-xl tracking-tight text-foreground sm:text-2xl">
           Learning
         </p>
-        <p className="text-sm text-muted">victorfitzjarrald.com</p>
+        <div className="flex items-center gap-4 text-sm">
+          <p className="hidden text-muted sm:block">victorfitzjarrald.com</p>
+          <Link
+            href={signedIn ? "/myday" : "/login"}
+            className="text-accent transition hover:underline"
+          >
+            {signedIn ? "Open MyDay" : "Sign in"}
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 pb-24 pt-8 sm:px-10">
@@ -33,20 +36,21 @@ export default function Home() {
           Victor Fitzjarrald
         </p>
         <h1 className="animate-rise-delay max-w-3xl font-[family-name:var(--font-display)] text-5xl leading-[1.05] tracking-tight text-foreground sm:text-7xl">
-          A quiet place to learn in public.
+          Learning
         </h1>
         <p className="animate-rise-late mt-6 max-w-xl text-lg leading-8 text-muted">
-          Notes, experiments, and project write-ups live here as this workspace
-          grows.
+          A private hub to stay current, study feeds, and keep expert-level
+          notes across AI, education, pedagogy, andragogy, content, product, and
+          AI tooling.
         </p>
 
         <div className="animate-rise-late mt-10 flex flex-wrap items-center gap-4">
-          <a
-            href="#topics"
+          <Link
+            href={signedIn ? "/myday" : "/login"}
             className="inline-flex items-center justify-center bg-accent px-5 py-3 text-sm font-semibold text-[#041018] transition hover:brightness-110"
           >
-            Browse topics
-          </a>
+            {signedIn ? "Continue MyDay" : "Enter MyDay"}
+          </Link>
           <a
             href="https://victorfitzjarrald.com"
             className="inline-flex items-center justify-center border border-line px-5 py-3 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
@@ -61,17 +65,14 @@ export default function Home() {
         />
       </main>
 
-      <section
-        id="topics"
-        className="mx-auto w-full max-w-5xl border-t border-line px-6 py-16 sm:px-10"
-      >
+      <section className="mx-auto w-full max-w-5xl border-t border-line px-6 py-16 sm:px-10">
         <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-foreground">
-          Coming soon
+          Inside the hub
         </h2>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
-          This site is wired for{" "}
-          <span className="text-foreground">learning.victorfitzjarrald.com</span>
-          . Content will land here as lessons and projects take shape.
+          MyDay collates domain feeds and private notes. Programs link out to
+          deep microsites — starting with The AI Expert, then Andragogy and
+          Product Management.
         </p>
       </section>
     </div>
