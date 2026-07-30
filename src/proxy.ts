@@ -18,12 +18,24 @@ function isPrivatePath(pathname: string) {
   );
 }
 
+function clearSessionCookie(response: NextResponse) {
+  response.cookies.set(COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
 async function hasValidSessionToken(token: string | undefined) {
   if (!token) return false;
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 16) {
-    // If secret isn't available in proxy runtime, fall back to presence check.
-    return true;
+    // If the signing secret is unavailable in the proxy runtime, defer to
+    // page-level getSession. Failing closed here loops with the login page
+    // auto-redirect when Node has the secret but Edge does not.
+    return Boolean(token);
   }
   try {
     const { payload } = await jwtVerify(
@@ -40,11 +52,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const path = normalizePath(pathname);
 
-  if (path === "/login") {
-    return NextResponse.next();
-  }
-
-  if (!isPrivatePath(pathname)) {
+  if (path === "/login" || !isPrivatePath(pathname)) {
     return NextResponse.next();
   }
 
@@ -54,15 +62,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const loginUrl = request.nextUrl.clone();
-  loginUrl.pathname = "/login";
-  loginUrl.search = "";
+  // Build an absolute login URL. Cloning nextUrl and rewriting pathname has
+  // interacted badly with platform redirects for /programs in the past.
+  const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", path);
 
   const response = NextResponse.redirect(loginUrl);
   if (token) {
-    // Drop stale/invalid cookies so pages and proxy agree.
-    response.cookies.delete(COOKIE_NAME);
+    clearSessionCookie(response);
   }
   return response;
 }

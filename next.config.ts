@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Do not add /Programs → /programs redirects here: Vercel can match
-  // redirect sources case-insensitively and create a loop for /programs.
-  // Casing normalization is handled in src/proxy.ts instead.
+  // Explicitly empty: never add /Programs → /programs redirects.
+  // Next/Vercel can match redirect sources case-insensitively, so a
+  // "/Programs" rule also matches "/programs" and redirects to itself
+  // (ERR_TOO_MANY_REDIRECTS) before proxy auth runs.
+  async redirects() {
+    return [];
+  },
 };
 
 export default nextConfig;

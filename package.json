@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/migrate.ts && next build",
+    "build": "tsx scripts/migrate.ts && next build && node scripts/check-redirects.mjs",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "tsx scripts/migrate.ts",
+    "check:redirects": "node scripts/check-redirects.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
