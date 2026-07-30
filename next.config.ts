@@ -1,20 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    return [
-      {
-        source: "/Programs",
-        destination: "/programs",
-        permanent: false,
-      },
-      {
-        source: "/Programs/:path*",
-        destination: "/programs/:path*",
-        permanent: false,
-      },
-    ];
-  },
+  // Do not add /Programs → /programs redirects here: Vercel can match
+  // redirect sources case-insensitively and create a loop for /programs.
+  // Casing normalization is handled in src/proxy.ts instead.
 };
 
 export default nextConfig;
