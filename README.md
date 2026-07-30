@@ -17,16 +17,22 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) → Sign in → MyDay.
 
-### Cross-device persistence (Neon)
+### Cross-device persistence (Neon on Vercel)
 
-1. Create a Neon database and set `DATABASE_URL` in `.env.local` / Vercel.
-2. Run migrations + admin seed:
+1. In the Vercel project, install **Neon** from the Marketplace (injects `DATABASE_URL`).
+2. Also set these env vars for Production + Preview (Neon does not create them):
+   - `SESSION_SECRET` (long random string)
+   - `ADMIN_USERNAME`
+   - `ADMIN_PASSWORD`
+3. Redeploy. `npm run build` runs `db:migrate` automatically when `DATABASE_URL` is present (schema + admin seed).
+
+Local without Neon: leave `DATABASE_URL` unset to use `data/local-store.json`.
+
+Manual migrate:
 
 ```bash
 npm run db:migrate
 ```
-
-3. Deploy with `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
 
 ## Routes
 

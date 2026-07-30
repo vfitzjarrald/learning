@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { hash } from "bcryptjs";
 import type { DbNote, DbUser, UserRole } from "./db";
+import { hasRemoteDatabase } from "./env";
 
 type StoreData = {
   users: DbUser[];
@@ -33,8 +34,7 @@ function writeStore(data: StoreData) {
 }
 
 export function isLocalStoreMode() {
-  const url = process.env.DATABASE_URL ?? "";
-  return !url || url.includes("placeholder");
+  return !hasRemoteDatabase();
 }
 
 export async function localEnsureAdminSeeded() {

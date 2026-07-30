@@ -5,20 +5,27 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 config();
 
+function getDatabaseUrl() {
+  return (
+    process.env.DATABASE_URL?.trim() ||
+    process.env.POSTGRES_URL?.trim() ||
+    process.env.POSTGRES_PRISMA_URL?.trim() ||
+    ""
+  );
+}
+
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL is required");
-  }
-  if (url.includes("placeholder")) {
-    throw new Error(
-      "DATABASE_URL is still a placeholder. Create a Neon DB and put the connection string in .env.local",
+  const url = getDatabaseUrl();
+  if (!url || url.includes("placeholder")) {
+    console.log(
+      "No Neon DATABASE_URL/POSTGRES_URL — skipping migrate (local file store mode).",
     );
+    return;
   }
 
   const sql = neon(url);
 
-  console.log("Applying schema…");
+  console.log("Applying Neon schema…");
   await sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`;
 
   await sql`
@@ -69,7 +76,7 @@ async function main() {
     console.log("Admin already present — skip seed.");
   }
 
-  console.log("Done.");
+  console.log("Neon migrate done.");
 }
 
 main().catch((err) => {
