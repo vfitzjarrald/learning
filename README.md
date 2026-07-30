@@ -34,7 +34,25 @@ Manual migrate:
 npm run db:migrate
 ```
 
-## Routes
+## Programs
+
+| Program | Path | Status |
+|---------|------|--------|
+| The AI Expert | External link | Live (link-out) |
+| Andragogy Expert | `/programs/andragogy` | Live — 16-week web course |
+| Product Management | TBD | Planned |
+
+### Andragogy Expert
+
+Web-only course modeled on the AI Expert portal:
+
+- My Andragogy Day home
+- 16 weeks / 4 phases with Mon–Fri lessons
+- Knowledge checks (phase + expert)
+- Phase diagnostics (baseline + reassessment)
+- Icon achievements and phase gates
+- Private per-lesson notes + progress (local store or Neon)
+
 
 | Route | Access | Purpose |
 |-------|--------|---------|

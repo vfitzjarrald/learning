@@ -206,7 +206,7 @@ export default async function MyDayPage({
                       href={program.href}
                       className="mt-3 inline-block text-sm text-accent hover:underline"
                     >
-                      View status
+                      {program.status === "live" ? "Enter course" : "View status"}
                     </Link>
                   )}
                 </li>
