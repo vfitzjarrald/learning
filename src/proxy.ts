@@ -1,64 +1,81 @@
+import { jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_NAME } from "@/lib/constants";
 
 const PRIVATE_ROOTS = ["myday", "feeds", "notes", "programs"] as const;
 
-function privatePathInfo(pathname: string) {
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments.length === 0) return null;
-  const root = segments[0];
-  const rootLower = root.toLowerCase();
-  if (!PRIVATE_ROOTS.includes(rootLower as (typeof PRIVATE_ROOTS)[number])) {
-    return null;
+function normalizePath(pathname: string) {
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    return pathname.slice(0, -1);
   }
-  const rest = segments.slice(1).join("/");
-  const canonical = rest ? `/${rootLower}/${rest}` : `/${rootLower}`;
-  return {
-    rootLower,
-    canonical,
-    needsCanonicalRedirect: pathname !== canonical,
-  };
+  return pathname;
 }
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const info = privatePathInfo(pathname);
-  if (!info) return NextResponse.next();
+function isPrivatePath(pathname: string) {
+  const path = normalizePath(pathname);
+  return PRIVATE_ROOTS.some(
+    (root) => path === `/${root}` || path.startsWith(`/${root}/`),
+  );
+}
 
-  if (info.needsCanonicalRedirect) {
-    const url = request.nextUrl.clone();
-    url.pathname = info.canonical;
-    return NextResponse.redirect(url);
+async function hasValidSessionToken(token: string | undefined) {
+  if (!token) return false;
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 16) {
+    // If secret isn't available in proxy runtime, fall back to presence check.
+    return true;
+  }
+  try {
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(secret),
+    );
+    return Boolean(payload.sub) && payload.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const path = normalizePath(pathname);
+
+  if (path === "/login") {
+    return NextResponse.next();
+  }
+
+  if (!isPrivatePath(pathname)) {
+    return NextResponse.next();
   }
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", info.canonical);
-    return NextResponse.redirect(loginUrl);
+  const valid = await hasValidSessionToken(token);
+  if (valid) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = "/login";
+  loginUrl.search = "";
+  loginUrl.searchParams.set("next", path);
+
+  const response = NextResponse.redirect(loginUrl);
+  if (token) {
+    // Drop stale/invalid cookies so pages and proxy agree.
+    response.cookies.delete(COOKIE_NAME);
+  }
+  return response;
 }
 
 export const config = {
-  // Include common casing variants so /Programs/... is handled before a static 404.
   matcher: [
     "/myday",
     "/myday/:path*",
-    "/MyDay",
-    "/MyDay/:path*",
     "/feeds",
     "/feeds/:path*",
-    "/Feeds",
-    "/Feeds/:path*",
     "/notes",
     "/notes/:path*",
-    "/Notes",
-    "/Notes/:path*",
     "/programs",
     "/programs/:path*",
-    "/Programs",
-    "/Programs/:path*",
   ],
 };
