@@ -23,12 +23,12 @@ export const PROGRAMS: Program[] = [
   },
   {
     id: "andragogy",
-    title: "Andragogy",
+    title: "Andragogy Expert",
     summary:
-      "Next program: adult learning foundations for facilitators and learning designers.",
-    href: "/programs#andragogy",
+      "16-week web course on adult learning foundations, motivation, facilitation, and expert practice — with diagnostics, checks, and icon achievements.",
+    href: "/programs/andragogy",
     external: false,
-    status: "next",
+    status: "live",
     domains: ["andragogy", "education", "pedagogy"],
   },
   {
