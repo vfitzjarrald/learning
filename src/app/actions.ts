@@ -55,7 +55,7 @@ export async function loginAction(
     return {
       ok: false,
       error:
-        "Could not sign in. For Neon, set DATABASE_URL and run npm run db:migrate. For local mode, set ADMIN_USERNAME and ADMIN_PASSWORD.",
+        "Could not sign in. On Vercel, confirm Neon DATABASE_URL plus SESSION_SECRET/ADMIN_* env vars. Locally, set ADMIN_USERNAME and ADMIN_PASSWORD (or DATABASE_URL + migrate).",
     };
   }
 
